@@ -3,196 +3,149 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>→ archivex</title>
+    <title>archivex</title>
     <style>
         * {
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
         }
 
         body {
-            min-height: 100vh;
-            background: #0a0a0a;
+            height: 100vh;
+            background: #111;
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
-            font-family: 'Courier New', monospace;
-            color: #e0e0e0;
-            overflow: hidden;
+            font-family: monospace;
+            color: #ccc;
         }
 
-        .bg-image {
+        canvas {
             position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            background: url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1920') center/cover;
-            opacity: 0.15;
-            z-index: -1;
+            pointer-events: none;
         }
 
-        .container {
+        .wrap {
             text-align: center;
-            padding: 2rem;
+            z-index: 1;
         }
 
-        .logo {
-            font-size: 3rem;
-            letter-spacing: 0.5rem;
-            margin-bottom: 2rem;
-            color: #fff;
-            text-shadow: 0 0 20px rgba(100, 200, 255, 0.5);
+        .name {
+            font-size: 2.2rem;
+            letter-spacing: 0.4rem;
+            color: #e8e8e8;
+            margin-bottom: 0.6rem;
         }
 
-        .subtitle {
-            font-size: 0.9rem;
-            color: #888;
-            margin-bottom: 3rem;
-            letter-spacing: 0.2rem;
-        }
-
-        .enter-btn {
-            display: inline-block;
-            padding: 1rem 3rem;
-            border: 1px solid #444;
-            color: #fff;
-            text-decoration: none;
-            font-size: 1rem;
-            letter-spacing: 0.3rem;
-            transition: all 0.3s ease;
-            background: transparent;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .enter-btn:hover {
-            border-color: #64c8ff;
-            box-shadow: 0 0 30px rgba(100, 200, 255, 0.3);
-            transform: translateY(-2px);
-        }
-
-        .enter-btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(100, 200, 255, 0.1), transparent);
-            transition: left 0.5s;
-        }
-
-        .enter-btn:hover::before {
-            left: 100%;
-        }
-
-        .lang-switch {
-            position: fixed;
-            top: 2rem;
-            right: 2rem;
-            display: flex;
-            gap: 1rem;
-        }
-
-        .lang-btn {
-            background: none;
-            border: 1px solid #333;
+        .desc {
+            font-size: 0.75rem;
             color: #666;
-            padding: 0.5rem 1rem;
-            cursor: pointer;
-            font-family: inherit;
-            font-size: 0.8rem;
-            transition: all 0.3s;
+            margin-bottom: 2.5rem;
+            height: 1rem;
         }
 
-        .lang-btn:hover,
-        .lang-btn.active {
-            border-color: #64c8ff;
+        a {
+            color: #999;
+            text-decoration: none;
+            font-size: 0.85rem;
+            padding: 0.7rem 2rem;
+            border: 1px solid #333;
+            transition: border-color 0.2s, color 0.2s;
+        }
+
+        a:hover {
+            border-color: #666;
             color: #fff;
-        }
-
-        .arrow {
-            display: block;
-            margin-top: 2rem;
-            font-size: 1.5rem;
-            animation: bounce 2s infinite;
-            color: #444;
-        }
-
-        @keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(10px); }
-        }
-
-        .line {
-            width: 50px;
-            height: 1px;
-            background: #333;
-            margin: 2rem auto;
-        }
-
-        .footer {
-            position: fixed;
-            bottom: 2rem;
-            font-size: 0.7rem;
-            color: #444;
-            letter-spacing: 0.1rem;
         }
     </style>
 </head>
 <body>
-    <div class="bg-image"></div>
+    <canvas id="rain"></canvas>
 
-    <div class="lang-switch">
-        <button class="lang-btn active" onclick="setLang('ru')">ru</button>
-        <button class="lang-btn" onclick="setLang('en')">en</button>
+    <div class="wrap">
+        <div class="name">archivex</div>
+        <div class="desc" id="desc">архив клиентов</div>
+        <a href="https://archivex.fun" id="link">войти</a>
     </div>
-
-    <div class="container">
-        <div class="logo">archivex</div>
-        
-        <div class="line"></div>
-        
-        <p class="subtitle" id="subtitle">архив клиентов</p>
-        
-        <a href="https://archivex.fun" class="enter-btn" id="enterBtn">
-            <span id="btnText">войти</span>
-        </a>
-        
-        <span class="arrow">↓</span>
-    </div>
-
-    <div class="footer" id="footer">нажми чтобы продолжить</div>
 
     <script>
-        const translations = {
-            ru: {
-                subtitle: 'архив клиентов',
-                btnText: 'войти',
-                footer: 'нажми чтобы продолжить'
-            },
-            en: {
-                subtitle: 'client archive',
-                btnText: 'enter',
-                footer: 'click to continue'
-            }
-        };
+        const c = document.getElementById('rain')
+        const ctx = c.getContext('2d')
+        let w, h
+        let drops = []
 
-        function setLang(lang) {
-            document.querySelectorAll('.lang-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            event.target.classList.add('active');
-
-            document.getElementById('subtitle').textContent = translations[lang].subtitle;
-            document.getElementById('btnText').textContent = translations[lang].btnText;
-            document.getElementById('footer').textContent = translations[lang].footer;
-            
-            document.documentElement.lang = lang;
+        function resize() {
+            w = c.width = window.innerWidth
+            h = c.height = window.innerHeight
         }
+
+        function init() {
+            resize()
+            drops = []
+            for (let i = 0; i < 150; i++) {
+                drops.push({
+                    x: Math.random() * w,
+                    y: Math.random() * h,
+                    len: Math.random() * 15 + 5,
+                    speed: Math.random() * 3 + 2,
+                    opacity: Math.random() * 0.15 + 0.03
+                })
+            }
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, w, h)
+            
+            for (let d of drops) {
+                ctx.beginPath()
+                ctx.moveTo(d.x, d.y)
+                ctx.lineTo(d.x + 0.5, d.y + d.len)
+                ctx.strokeStyle = `rgba(180, 200, 220, ${d.opacity})`
+                ctx.lineWidth = 1
+                ctx.stroke()
+                
+                d.y += d.speed
+                d.x += 0.2
+                
+                if (d.y > h) {
+                    d.y = -d.len
+                    d.x = Math.random() * w
+                }
+            }
+            
+            requestAnimationFrame(draw)
+        }
+
+        window.addEventListener('resize', init)
+        init()
+        draw()
+
+        const txt = {
+            ru: { desc: 'архив клиентов', link: 'войти' },
+            en: { desc: 'clients archive', link: 'enter' }
+        }
+
+        let lang = 'ru'
+        const desc = document.getElementById('desc')
+        const link = document.getElementById('link')
+
+        setInterval(() => {
+            desc.style.opacity = '0'
+            link.style.opacity = '0'
+            
+            setTimeout(() => {
+                lang = lang === 'ru' ? 'en' : 'ru'
+                desc.textContent = txt[lang].desc
+                link.textContent = txt[lang].link
+                desc.style.opacity = '1'
+                link.style.opacity = '1'
+            }, 400)
+        }, 4000)
+
+        desc.style.transition = 'opacity 0.4s'
+        link.style.transition = 'opacity 0.4s'
     </script>
 </body>
 </html>
