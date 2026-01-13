@@ -1,5 +1,4 @@
 const clientsData = [
-    // Твой список клиентов здесь
 ]
 
 let current_gallery = []
